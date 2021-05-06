@@ -11,15 +11,18 @@ It returns the author object that has the matching ID.
 --a simple find method should do the trick. match find for authors, match author.id to id parameter
 */
 
-function findAuthorById(authors, id) {
-  const correctAuthor = authors.find((author) => {
-    if (author.id === id) {
-      return author
-    }
-  });
-  return correctAuthor;
-}
+// function findAuthorById(authors, id) {
+//   const correctAuthor = authors.find((author) => {
+//     if (author.id === id) {
+//       return author
+//     }
+//   });
+//   return correctAuthor;
+// }
 
+function findAuthorById(authors, id) {
+  return authors.find((author) => author.id === id)
+}
 // The `findBookById()` function in `public/src/books.js` has two parameters, in the following order:
 // - An array of books.
 // - An ID of a single book.
@@ -40,12 +43,16 @@ function findAuthorById(authors, id) {
 
 //--find function again! loop through books, find the id that matches, return book.
 
+// function findBookById(books, id) {
+//   const foundBookById = books.find((book) => {
+//     if (book.id === id) 
+//     return book;
+//   });
+//   return foundBookById;
+// }
+
 function findBookById(books, id) {
-  const foundBookById = books.find((book) => {
-    if (book.id === id) 
-    return book;
-  });
-  return foundBookById;
+  return books.find((book) => book.id === id)
 }
 
 /* 
@@ -58,15 +65,39 @@ function findBookById(books, id) {
 3. return [booksLoanedOut, booksReturned]
 */
 
+// function partitionBooksByBorrowedStatus(books) {
+//   const booksLoanedOut = books.filter((book) => {
+//     return book.borrows.some((bookBorrow) => bookBorrow.returned === false);
+//   });
+//   const booksReturned = books.filter((book) => {
+//     return book.borrows.every((bookBorrow) => bookBorrow.returned === true);
+//   });
+//   return [booksLoanedOut, booksReturned]
+// }
+
+// function partitionBooksByBorrowedStatus(books) {
+//   return books.map((book) => {
+//     let first = [];
+//     let second = [];
+//     if (!book.borrows[0].returned) first = first.push(book);
+//     else {
+//       second = second.push(book);
+//     }
+//     console.log(first)
+//     return first, second
+//   })
+// }
+
 function partitionBooksByBorrowedStatus(books) {
-  const booksLoanedOut = books.filter((book) => {
-    return book.borrows.some((bookBorrow) => bookBorrow.returned === false);
-  });
-  const booksReturned = books.filter((book) => {
-    return book.borrows.every((bookBorrow) => bookBorrow.returned === true);
-  });
-  return [booksLoanedOut, booksReturned]
+  return books.reduce((acc, book) => {
+    if (!book.borrows[0].returned) acc[0].push(book);
+    else {
+      acc[1].push(book)
+    }
+    return acc;
+  },[[],[]])
 }
+
 
 /* 
 1. Set book.borrows (an array) to a variable, borrows. 
@@ -78,27 +109,26 @@ function partitionBooksByBorrowedStatus(books) {
     b. Return the new borrow object.
 6. Return the results of the filter, sliced to the first 10.
 */ 
+// function getBorrowersForBook(book, accounts) {
+//   const accountID = accounts.reduce((acc, account) => {
+//     acc[account.id] = account
+//     return acc
+//   }, {})
+//   console.log('accountID', accountID)
+
+//   return book.borrows.map(({ id, returned }) => ({
+//     ...accountID[id],
+//     returned,
+//   })).slice(0, 10)
+// }
+
 function getBorrowersForBook(book, accounts) {
-  // const borrows = book.borrows; 
-  // const accountIDs = accounts.map((account) => account.id);
-  // const borrowersArray = borrows.filter((borrow) => {
-  //   if (accountIDs.includes(borrow.id)) {
-  //     const borrowerAccount = accounts.find((account) => account.id === borrow.id);
-  //     return borrow = { ...borrow, ...borrowerAccount }
-  //   };
-  // })
-  // return borrowersArray.slice(0, 10);
-
-  const accountID = accounts.reduce((acc, account) => {
-    acc[account.id] = account
-    return acc
-  }, {})
-  console.log('accountID', accountID)
-
-  return book.borrows.map(({ id, returned }) => ({
-    ...accountID[id],
-    returned,
-  })).slice(0, 10)
+  const borrows = book.borrows;
+  const newArray = borrows.map((borrow) => {
+    const accountMatch = accounts.find((account) => borrow.id === account.id);
+    return { ...borrow, ...accountMatch }
+  })
+  return newArray.slice(0, 10)
 }
 
 module.exports = {

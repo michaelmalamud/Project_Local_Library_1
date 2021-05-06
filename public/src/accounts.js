@@ -8,6 +8,8 @@ in the following order:
 It returns the account object that has the matching ID.
 */
 
+//Use find method to find the specific account whose id matches the given id. 
+
 const findAccountById = (accounts, id) =>
   accounts.find((account) => account.id === id);
 
@@ -18,15 +20,15 @@ The `sortAccountsByLastName()` function in `public/src/accounts.js` has a single
 
 It returns a sorted array of objects. The objects are sorted alphabetically by last name.
 
-~~~~~~~~~~~~~~~~~
-
---Use sort to order the accounts by .name.last. 
 */
+
+//Use sort to order the accounts by .name.last. 
 
 const sortAccountsByLastName = (accounts) =>
   accounts.sort((accountA, accountB) =>
-    accountA.name.last > accountB.name.last ? 1 : -1
+    accountA.name.last < accountB.name.last ? -1 : 1
   );
+
 
 /*
 The `getTotalNumberOfBorrows()` function in `public/src/accounts.js` has two parameters, in the following order:
@@ -36,48 +38,20 @@ The `getTotalNumberOfBorrows()` function in `public/src/accounts.js` has two par
 
 It returns a _number_ that represents the number of times the account's ID appears in any book's `borrow` array.
 
---access ids within books' borrows array, which is a value that is within an object,
-that is in an array, which is the value of the "borrows" key in a larger object,
-which itself is in an array of objects. borrows.id = array -> object -> borrows key ->
-array -> object -> id.  
---use reduce to add to an accumulator whenever account.id is found in any of the borrows
-in the books array. 
+/*
+1. Use map to collect all the arrays of book borrows into a single array.
+2. Use reduce to flatten the array of arrays into a single array.
+3. Use reduce to add up all the times that the account's id appears in the flattened array.
 */
 
 function getTotalNumberOfBorrows(account, books) {
-  let result = 0;
-  books.forEach((book) => {
-    const bookBorrows = book.borrows.filter(
-      (borrow) => borrow.id === account.id
-    );
-    result += bookBorrows.length;
-  });
-  return result;
+  const borrowsArrays = books.map((book) => book.borrows)
+  const flattened = borrowsArrays.reduce((acc, curVal) => acc.concat(curVal));
+  return flattened.reduce((acc, curVal) => {
+     if (curVal.id === account.id) acc += 1;
+     return acc; 
+  }, 0)
 }
-
-/*borrowArray.filter((borrow) => {
-      return borrow.id === account.id;
-    });
-  });
-  return totalBorrows.length;
-}
-/*
-//const total =  
- /* bookBorrows.forEach((borrow) => {
-    console.log(borrow);
- });
- */
-/*   if (borrow.id === account.id) {
-      let numberOfBorrows = 0;
-      borrows.reduce((acc, numberOfBorrows) => { 
-      acc + numberOfBorrows; 
-      return acc;
-      });
-      return numberOfBorrows;
-    }
-  });
-  return total;
-  */
 
 /*
 The `getBooksPossessedByAccount` function in `public/src/accounts.js` has three parameters, in the following order:
@@ -124,14 +98,28 @@ array of objects. looping through the author array, if there is a match, take th
 object out. 
 */
 
+// function getBooksPossessedByAccount(account, books, authors) {
+//   return books.filter((book) =>
+//     book.borrows.some((borrow) => borrow.id === account.id && !borrow.returned)
+//   ).map((book) => ({
+//       ...book, //spread operator
+//       author: authors.find((author) => author.id === book.authorId)
+//     })
+//   );
+// }
 function getBooksPossessedByAccount(account, books, authors) {
-  return books.filter((book) =>
-    book.borrows.some((borrow) => borrow.id === account.id && !borrow.returned)
-  ).map((book) => ({
-      ...book, //spread operator
-      author: authors.find((author) => author.id === book.authorId)
-    })
-  );
+  return books.reduce((acc, book) => {
+    const borrowed = book.borrows.some((borrow) => (borrow.id === account.id && borrow.returned === false));
+    if (borrowed) {
+      const bookAuthor = authors.find((author) => author.id === book.authorId);
+      const id = bookAuthor.id;
+      const first = bookAuthor.name.first;
+      const last = bookAuthor.name.last; 
+      const possessedBook = { ...book, author: { id, name: { first, last } } };
+      acc.push(possessedBook);
+    }
+    return acc;
+  },[])
 }
 
 /*
